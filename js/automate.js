@@ -7,6 +7,7 @@ import Point from './geometry/Point';
 import Scene from './scene';
 import colors from './misc/colors';
 import { toggleContinuous } from './webaudio/test-sound';
+import { audioCtx } from './webaudio/webaudio';
 
 // --- Movement state ---
 const MOVE_SPEED = 0.8; // pixels per frame — gentle drift
@@ -101,8 +102,12 @@ function init() {
     'click',
     () => {
       if (!soundStarted) {
-        toggleContinuous();
         soundStarted = true;
+        // Resume suspended AudioContext before starting oscillators
+        const resume = audioCtx.state === 'suspended' ? audioCtx.resume() : Promise.resolve();
+        resume.then(() => {
+          toggleContinuous();
+        });
       }
     },
     { once: true }
