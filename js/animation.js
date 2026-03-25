@@ -12,8 +12,12 @@ function startAnimationLoop(){
       null ;
 
   recursiveAnim = function() {
-    updateAutoMovement();
-    drawFrame();
+    try {
+      updateAutoMovement();
+      drawFrame();
+    } catch (e) {
+      console.error('Frame error:', e);
+    }
     animFrame( recursiveAnim );
   };
   animFrame(recursiveAnim);
