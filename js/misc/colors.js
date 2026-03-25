@@ -1,13 +1,13 @@
 var colors = {
-  line: "#514248",
-  unfinished : "#dbb4ad",
-  ray: "#ebb4a2",
-  secondary: "#efe2d4",
-  red: "#a02e61",
-  lightRed: "hsla(337, 20%, 40%, 0.5)",
-  light: "#ffe3dc",
-  slight: "#99ad7c",
-  circle: "#53ab6d",
+  line: "#555",
+  unfinished: "#999",
+  ray: "#888",
+  secondary: "#bbb",
+  red: "#333",
+  lightRed: "hsla(0, 0%, 40%, 0.5)",
+  light: "#ccc",
+  slight: "#666",
+  circle: "#777",
 };
 
 
