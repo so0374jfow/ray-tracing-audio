@@ -156,12 +156,13 @@ function generateEnvironment() {
 // --- Init ---
 let soundStarted = false;
 
-function init() {
+function init(envGenerator, regenerate = true) {
+  if (!envGenerator) envGenerator = generateEnvironment;
   // Generate first environment
-  generateEnvironment();
+  envGenerator();
 
   // Regenerate on interval
-  setInterval(generateEnvironment, ENV_INTERVAL);
+  if (regenerate) setInterval(envGenerator, ENV_INTERVAL);
 
   // Start continuous sound on first user click (AudioContext policy)
   document.addEventListener(
