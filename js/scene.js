@@ -9,6 +9,7 @@ var Scene = {
   finishedLines: [],
   
   _distances: [],
+  _primaryDistances: [],
   intersections: [],
   hiddenIntersections: [],
   lineBeingDrawn: null,

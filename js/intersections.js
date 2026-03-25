@@ -9,6 +9,7 @@ import {
 import Ray from './geometry/Ray'
 import Circle from './geometry/Circle';
 import Line from './geometry/Line';
+import {numberOfRays} from './config.js'
 
 /**
  * [rayLineIntersection description]
@@ -205,9 +206,15 @@ function checkSceneIntersections(){
   Scene.intersections = []; // the nearest intersection
   Scene.hiddenIntersections = []; // all other intersections
   Scene._distances = [];
+  Scene._primaryDistances = new Array(numberOfRays);
 
   Scene.primaryRays.map(rayMapper)
-  .forEach(forEachMappedRay)
+  .forEach((result, index) => {
+    forEachMappedRay(result);
+    Scene._primaryDistances[index] = result.nearestIntersect
+      ? distanceBetween(result.nearestIntersect, result.ray)
+      : 10000;
+  })
 }
 
 export {checkSceneIntersections};
