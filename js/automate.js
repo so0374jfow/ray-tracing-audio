@@ -29,9 +29,19 @@ function randInt(min, max) {
   return Math.floor(rand(min, max + 1));
 }
 
+// --- Pluggable movement ---
+let customMovementFn = null;
+function setCustomMovement(fn) {
+  customMovementFn = fn;
+}
+
 // --- Auto movement ---
 // Smooth wandering: slowly rotate a velocity vector, bounce off canvas edges.
 function updateAutoMovement() {
+  if (customMovementFn) {
+    customMovementFn();
+    return;
+  }
   const { width, height } = viewport();
 
   // Gently rotate direction
@@ -181,4 +191,4 @@ function init(envGenerator, regenerate = true) {
   );
 }
 
-export { init, updateAutoMovement };
+export { init, updateAutoMovement, setCustomMovement };

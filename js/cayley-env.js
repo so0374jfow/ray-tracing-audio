@@ -4,6 +4,8 @@ import Circle from './geometry/Circle';
 import Point from './geometry/Point';
 import Scene from './scene';
 import { ctx } from './canvas';
+import player from './player';
+import { updatePrimaryRays } from './shoot-rays';
 
 // --- Q8 Cayley graph ---
 // 8 elements: 1, -1, i, -i, j, -j, k, -k
@@ -182,5 +184,79 @@ export function drawCayleyLabels() {
     ctx.fillText(label, legendX + 30, legendY);
     legendY += 22;
   }
+  // Draw current cycle indicator
+  if (activeCycleLabel) {
+    ctx.font = 'bold 16px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = activeCycleColor;
+    ctx.fillText(activeCycleLabel, legendX, legendY + 10);
+  }
+
   ctx.restore();
+}
+
+// --- Cyclic Q8 movement ---
+// Player traces the multiplication cycles of the quaternion group:
+//   xi: 1->i->-1->-i->1,  j->-k->-j->k->j
+//   xj: 1->j->-1->-j->1,  i->k->-i->-k->i
+//   xk: 1->k->-1->-k->1,  i->-j->-i->j->i
+// This encodes 4D quaternion rotations as 2D paths through the Cayley graph.
+
+const CYCLES = [
+  // xi cycles (red)
+  { nodes: ['1', 'i', '-1', '-i'], label: 'xi: 1->i->-1->-i', color: '#8B2252' },
+  { nodes: ['j', '-k', '-j', 'k'], label: 'xi: j->-k->-j->k', color: '#8B2252' },
+  // xj cycles (green)
+  { nodes: ['1', 'j', '-1', '-j'], label: 'xj: 1->j->-1->-j', color: '#2E7D32' },
+  { nodes: ['i', 'k', '-i', '-k'], label: 'xj: i->k->-i->-k', color: '#2E7D32' },
+  // xk cycles (blue)
+  { nodes: ['1', 'k', '-1', '-k'], label: 'xk: 1->k->-1->-k', color: '#1565C0' },
+  { nodes: ['i', '-j', '-i', 'j'], label: 'xk: i->-j->-i->j', color: '#1565C0' },
+];
+
+const EDGE_SPEED = 0.008; // interpolation progress per frame (~125 frames per edge ≈ 2s at 60fps)
+
+let cycleIdx = 0;
+let stepIdx = 0; // which edge within the current cycle (0..3)
+let t = 0; // interpolation 0..1 along current edge
+let activeCycleLabel = '';
+let activeCycleColor = '#fff';
+
+// Smooth easing for natural movement
+function ease(x) {
+  // Smooth step: accelerate then decelerate
+  return x * x * (3 - 2 * x);
+}
+
+export function updateCayleyMovement() {
+  if (!nodePositions) return;
+
+  const cycle = CYCLES[cycleIdx];
+  activeCycleLabel = cycle.label;
+  activeCycleColor = cycle.color;
+
+  const fromName = cycle.nodes[stepIdx];
+  const toName = cycle.nodes[(stepIdx + 1) % cycle.nodes.length];
+  const from = nodePositions[fromName];
+  const to = nodePositions[toName];
+
+  // Interpolate with easing
+  const et = ease(t);
+  const x = from.x + (to.x - from.x) * et;
+  const y = from.y + (to.y - from.y) * et;
+
+  player.set(x, y);
+  updatePrimaryRays();
+
+  // Advance
+  t += EDGE_SPEED;
+  if (t >= 1) {
+    t = 0;
+    stepIdx++;
+    if (stepIdx >= cycle.nodes.length) {
+      // Completed full 4-cycle, move to next cycle
+      stepIdx = 0;
+      cycleIdx = (cycleIdx + 1) % CYCLES.length;
+    }
+  }
 }
