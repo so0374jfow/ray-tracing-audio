@@ -1,5 +1,5 @@
 import drawFrame from './frame'
-import {updatePlayerMovement} from './interaction'
+import { updateAutoMovement } from './automate'
 
 var recursiveAnim;
 
@@ -12,7 +12,7 @@ function startAnimationLoop(){
       null ;
 
   recursiveAnim = function() {
-    updatePlayerMovement();
+    updateAutoMovement();
     drawFrame();
     animFrame( recursiveAnim );
   };

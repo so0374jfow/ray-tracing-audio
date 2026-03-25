@@ -1,10 +1,8 @@
-import {startAnimationLoop} from './animation'
-import * as interaction from './interaction'
-import player from './player'
-import {panners} from './webaudio/endpoints'
+import { startAnimationLoop } from './animation';
+import { init as initAutomate } from './automate';
 
-function init(){
-  interaction.init();
+function init() {
+  initAutomate();
   startAnimationLoop();
 }
 
