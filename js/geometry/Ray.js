@@ -83,7 +83,8 @@ class Ray{
     // to
     ctx.lineTo(this.x1,this.y1)
     // color
-    ctx.strokeStyle = `rgba(${200 - 30*this.maxChildren},20,30,${0.15*this.maxChildren})`
+    const g = 60 + 20 * this.maxChildren;
+    ctx.strokeStyle = `rgba(${g},${g},${g},${0.15*this.maxChildren})`
     ctx.lineWidth = 1
     // draw it
     ctx.stroke()
