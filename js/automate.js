@@ -56,35 +56,101 @@ function updateAutoMovement() {
   updatePrimaryRays();
 }
 
-// --- Environment generation ---
-function generateEnvironment() {
-  const { width, height } = viewport();
-  const pad = 60;
+// --- Quaternion environment generation ---
+// Four environment types that produce structured phase relationships
+// across ray quadrants, encoding quaternion rotation geometry.
 
-  // Clear existing scene objects
+let envTypeIndex = 0;
+
+function clearScene() {
   Scene.finishedLines.length = 0;
   Scene.circles.length = 0;
+}
 
-  // Generate 3-6 random walls
-  const numLines = randInt(3, 6);
-  for (let i = 0; i < numLines; i++) {
-    const x = rand(pad, width - pad);
-    const y = rand(pad, height - pad);
-    const len = rand(60, 250);
-    const a = Math.random() * Math.PI * 2;
-    const line = new Line(x, y, x + Math.cos(a) * len, y + Math.sin(a) * len, colors.line);
-    line.width = 4;
-    Scene.finishedLines.push(line);
-  }
+function addWall(x1, y1, x2, y2) {
+  const line = new Line(x1, y1, x2, y2, colors.line);
+  line.width = 4;
+  Scene.finishedLines.push(line);
+}
 
-  // Generate 1-2 circles
-  const numCircles = randInt(1, 2);
-  for (let i = 0; i < numCircles; i++) {
-    const cx = rand(pad + 40, width - pad - 40);
-    const cy = rand(pad + 40, height - pad - 40);
-    const r = rand(20, 80);
-    Scene.circles.push(new Circle(new Point(cx, cy), r));
-  }
+// Type A — "Orbit": Single offset circle.
+// Player orbiting produces sinusoidal distance modulation = single quaternion rotation e^(μωt)
+function genOrbit() {
+  const { width, height } = viewport();
+  const cx = width / 2;
+  const cy = height / 2;
+  const offsetX = rand(-160, 160);
+  const offsetY = rand(-100, 100);
+  Scene.circles.push(new Circle(new Point(cx + offsetX, cy + offsetY), rand(80, 130)));
+}
+
+// Type B — "Double Rotation": Two circles at opposing positions.
+// Two independent sinusoidal modulations = double rotation e^(μ₁ω₁t)·q₀·e^(μ₂ω₂t)
+function genDoubleRotation() {
+  const { width, height } = viewport();
+  const cx = width / 2;
+  const cy = height / 2;
+  const spread = rand(120, 180);
+  const a = rand(0, Math.PI * 2);
+  Scene.circles.push(
+    new Circle(new Point(cx + Math.cos(a) * spread, cy + Math.sin(a) * spread), rand(50, 80))
+  );
+  Scene.circles.push(
+    new Circle(
+      new Point(cx - Math.cos(a) * spread * 0.8, cy - Math.sin(a) * spread * 0.8),
+      rand(40, 65)
+    )
+  );
+}
+
+// Type C — "Wedge": Two angled walls forming a V + circle.
+// Asymmetric reflections encode non-commutativity: reflection order matters (ij ≠ ji)
+function genWedge() {
+  const { width, height } = viewport();
+  const cx = width / 2;
+  const cy = height / 2;
+  const spread = rand(150, 220);
+  const depth = rand(140, 200);
+  const rot = rand(0, Math.PI * 2);
+  const cos = Math.cos(rot);
+  const sin = Math.sin(rot);
+  // Two walls meeting at a point, rotated randomly
+  addWall(
+    cx + (-spread) * cos,
+    cy + (-spread) * sin,
+    cx + depth * -sin,
+    cy + depth * cos
+  );
+  addWall(
+    cx + spread * cos,
+    cy + spread * sin,
+    cx + depth * -sin,
+    cy + depth * cos
+  );
+  // Circle on the opposite side of the wedge opening
+  Scene.circles.push(
+    new Circle(new Point(cx - depth * 0.7 * -sin, cy - depth * 0.7 * cos), rand(45, 70))
+  );
+}
+
+// Type D — "Concentric": Two concentric circles.
+// Inner/outer reflections create coupled phase shifts — a resonant cavity
+function genConcentric() {
+  const { width, height } = viewport();
+  const cx = width / 2;
+  const cy = height / 2;
+  const outerR = Math.min(width, height) * rand(0.3, 0.4);
+  const innerR = outerR * rand(0.25, 0.4);
+  Scene.circles.push(new Circle(new Point(cx, cy), outerR));
+  Scene.circles.push(new Circle(new Point(cx, cy), innerR));
+}
+
+const envGenerators = [genOrbit, genDoubleRotation, genWedge, genConcentric];
+
+function generateEnvironment() {
+  clearScene();
+  envGenerators[envTypeIndex]();
+  envTypeIndex = (envTypeIndex + 1) % envGenerators.length;
 }
 
 // --- Init ---
