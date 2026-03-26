@@ -13,6 +13,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         cayley: resolve(__dirname, 'cayley.html'),
         camera: resolve(__dirname, 'camera.html'),
+        platonic: resolve(__dirname, 'platonic.html'),
       },
     },
   },
