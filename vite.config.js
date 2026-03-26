@@ -12,6 +12,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         cayley: resolve(__dirname, 'cayley.html'),
+        camera: resolve(__dirname, 'camera.html'),
       },
     },
   },
