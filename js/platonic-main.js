@@ -4,13 +4,15 @@ import {
   generatePlatonicEnvironment,
   updatePlatonicGeometry,
   getCurrentSolidName,
+  drawInnerEdges,
 } from './platonic-env';
 import Scene from './scene';
 import { ctx } from './canvas';
 
-// Patch Scene.render to draw solid name overlay
+// Patch Scene.render to draw inner edges (visual only) and label overlay
 const originalRender = Scene.render.bind(Scene);
 Scene.render = function () {
+  drawInnerEdges(ctx);
   originalRender();
   drawLabel();
 };

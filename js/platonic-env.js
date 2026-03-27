@@ -25,6 +25,7 @@ let rotZ = 0;
 let orbitAngle = 0;
 let paddedSolids = [];
 let frameCount = 0;
+let innerEdges = []; // visual-only edges (not walls)
 
 // --- Padding: make all solids have the same vertex/edge count ---
 
@@ -90,6 +91,46 @@ function easeInOut(t) {
   return t * t * (3 - 2 * t);
 }
 
+// --- Convex hull (Andrew's monotone chain) ---
+
+function cross(o, a, b) {
+  return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+}
+
+function convexHull(points) {
+  // Deduplicate near-identical points
+  const unique = [];
+  for (const p of points) {
+    let dup = false;
+    for (const u of unique) {
+      if (Math.abs(p[0] - u[0]) < 0.5 && Math.abs(p[1] - u[1]) < 0.5) {
+        dup = true;
+        break;
+      }
+    }
+    if (!dup) unique.push(p);
+  }
+  const pts = unique.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  if (pts.length < 3) return pts;
+
+  const lower = [];
+  for (const p of pts) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0)
+      lower.pop();
+    lower.push(p);
+  }
+  const upper = [];
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const p = pts[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0)
+      upper.pop();
+    upper.push(p);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
+}
+
 // --- Scene update (called every frame via setCustomMovement) ---
 
 function updatePlatonicGeometry() {
@@ -136,20 +177,27 @@ function updatePlatonicGeometry() {
     projected.push(project(v, solidCx, solidCy, scale));
   }
 
-  // Build edges — use target solid's edge list for emergence effect
-  const edges = solidB.edges;
-  Scene.finishedLines.length = 0;
+  // Compute convex hull of projected points — only hull edges become walls
+  const hull = convexHull(projected);
 
+  // Build all edges for visual drawing (stored separately, not as walls)
+  const edges = solidB.edges;
+  innerEdges.length = 0;
   for (let i = 0; i < edges.length; i++) {
     const [a, b] = edges[i];
     const p1 = projected[a];
     const p2 = projected[b];
-
-    // Skip degenerate edges (collapsed duplicate vertices)
     const dx = p2[0] - p1[0];
     const dy = p2[1] - p1[1];
     if (dx * dx + dy * dy < 1) continue;
+    innerEdges.push([p1[0], p1[1], p2[0], p2[1]]);
+  }
 
+  // Hull edges become walls (Scene.finishedLines) — rays bounce off these
+  Scene.finishedLines.length = 0;
+  for (let i = 0; i < hull.length; i++) {
+    const p1 = hull[i];
+    const p2 = hull[(i + 1) % hull.length];
     const line = new Line(p1[0], p1[1], p2[0], p2[1], colors.line);
     line.width = 3;
     Scene.finishedLines.push(line);
@@ -179,4 +227,18 @@ function getCurrentSolidName() {
   return `${solidA.name} → ${solidB.name}`;
 }
 
-export { generatePlatonicEnvironment, updatePlatonicGeometry, getCurrentSolidName };
+// Draw inner edges (visual only, not walls) — called from patched Scene.render
+function drawInnerEdges(canvasCtx) {
+  canvasCtx.save();
+  canvasCtx.strokeStyle = 'rgba(100, 100, 100, 0.25)';
+  canvasCtx.lineWidth = 1;
+  for (const [x1, y1, x2, y2] of innerEdges) {
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(x1, y1);
+    canvasCtx.lineTo(x2, y2);
+    canvasCtx.stroke();
+  }
+  canvasCtx.restore();
+}
+
+export { generatePlatonicEnvironment, updatePlatonicGeometry, getCurrentSolidName, drawInnerEdges };
