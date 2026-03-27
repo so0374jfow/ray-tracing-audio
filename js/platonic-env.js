@@ -24,6 +24,7 @@ let rotX = 0;
 let rotZ = 0;
 let orbitAngle = 0;
 let paddedSolids = [];
+let frameCount = 0;
 
 // --- Padding: make all solids have the same vertex/edge count ---
 
@@ -104,10 +105,16 @@ function updatePlatonicGeometry() {
   rotX += ROT_X_SPEED;
   rotZ += ROT_Z_SPEED;
   orbitAngle += ORBIT_SPEED;
+  frameCount++;
 
   const { width, height } = viewport();
   const cx = width / 2;
   const cy = height / 2;
+
+  // Nudge player position by sub-pixel amount each frame so updatePlay()
+  // detects a change and updates audio (it early-returns if position is identical)
+  player.set(cx + Math.sin(frameCount * 0.01) * 0.01, cy + Math.cos(frameCount * 0.01) * 0.01);
+  updatePrimaryRays();
   const scale = Math.min(width, height) * 0.35;
 
   // Offset the solid's center from the player — breaks symmetry for audio variation
