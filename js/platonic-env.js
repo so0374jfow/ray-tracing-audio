@@ -11,14 +11,18 @@ const MAX_VERTS = 20; // dodecahedron vertex count
 const MAX_EDGES = 30; // dodecahedron/icosahedron edge count
 const MORPH_SPEED = 0.003; // ~5.5 seconds per transition at 60fps
 const FOCAL_LENGTH = 3.0;
-const ROT_Y_SPEED = 0.008;
-const ROT_X_SPEED = 0.003;
+const ROT_Y_SPEED = 0.012;
+const ROT_X_SPEED = 0.005;
+const ROT_Z_SPEED = 0.007;
+const ORBIT_SPEED = 0.004; // solid orbits around player for asymmetry
 
 // --- State ---
 let currentIndex = 0;
 let morphT = 0;
 let rotY = 0;
 let rotX = 0;
+let rotZ = 0;
+let orbitAngle = 0;
 let paddedSolids = [];
 
 // --- Padding: make all solids have the same vertex/edge count ---
@@ -65,6 +69,12 @@ function rotateXAxis(v, a) {
   return [v[0], c * v[1] - s * v[2], s * v[1] + c * v[2]];
 }
 
+function rotateZAxis(v, a) {
+  const c = Math.cos(a),
+    s = Math.sin(a);
+  return [c * v[0] - s * v[1], s * v[0] + c * v[1], v[2]];
+}
+
 function project(v, cx, cy, scale) {
   const z = v[2] + FOCAL_LENGTH;
   const f = FOCAL_LENGTH / z;
@@ -92,11 +102,18 @@ function updatePlatonicGeometry() {
   // Advance rotation
   rotY += ROT_Y_SPEED;
   rotX += ROT_X_SPEED;
+  rotZ += ROT_Z_SPEED;
+  orbitAngle += ORBIT_SPEED;
 
   const { width, height } = viewport();
   const cx = width / 2;
   const cy = height / 2;
-  const scale = Math.min(width, height) * 0.3;
+  const scale = Math.min(width, height) * 0.35;
+
+  // Offset the solid's center from the player — breaks symmetry for audio variation
+  const orbitRadius = Math.min(width, height) * 0.12;
+  const solidCx = cx + Math.cos(orbitAngle) * orbitRadius;
+  const solidCy = cy + Math.sin(orbitAngle * 0.7) * orbitRadius;
 
   const solidA = paddedSolids[currentIndex];
   const solidB = paddedSolids[(currentIndex + 1) % paddedSolids.length];
@@ -108,7 +125,8 @@ function updatePlatonicGeometry() {
     let v = lerp3(solidA.vertices[i], solidB.vertices[i], t);
     v = rotateYAxis(v, rotY);
     v = rotateXAxis(v, rotX);
-    projected.push(project(v, cx, cy, scale));
+    v = rotateZAxis(v, rotZ);
+    projected.push(project(v, solidCx, solidCy, scale));
   }
 
   // Build edges — use target solid's edge list for emergence effect
