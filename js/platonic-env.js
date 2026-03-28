@@ -24,8 +24,16 @@ let rotX = 0;
 let rotZ = 0;
 let orbitAngle = 0;
 let paddedSolids = [];
-let frameCount = 0;
 let innerEdges = []; // visual-only edges (not walls)
+
+// Player bouncing movement state
+let playerAngle = Math.random() * Math.PI * 2;
+let burstTimer = 0;
+const BASE_SPEED = 1.5;
+const BURST_SPEED = 4.5;
+const BURST_INTERVAL = 120; // frames between bursts
+const BURST_DURATION = 20; // frames per burst
+const TURN_RATE = 0.02;
 
 // --- Padding: make all solids have the same vertex/edge count ---
 
@@ -131,6 +139,45 @@ function convexHull(points) {
   return lower.concat(upper);
 }
 
+// --- Point-in-convex-hull test ---
+
+function isInsideHull(px, py, hull) {
+  for (let i = 0; i < hull.length; i++) {
+    const a = hull[i],
+      b = hull[(i + 1) % hull.length];
+    if ((b[0] - a[0]) * (py - a[1]) - (b[1] - a[1]) * (px - a[0]) < 0) return false;
+  }
+  return true;
+}
+
+// Find nearest hull edge to point and reflect angle off it
+function reflectOffHull(px, py, hull, angle) {
+  let minDist = Infinity;
+  let bestEdge = 0;
+  for (let i = 0; i < hull.length; i++) {
+    const a = hull[i],
+      b = hull[(i + 1) % hull.length];
+    // Distance from point to line segment
+    const dx = b[0] - a[0],
+      dy = b[1] - a[1];
+    const len2 = dx * dx + dy * dy;
+    if (len2 < 1) continue;
+    const t = Math.max(0, Math.min(1, ((px - a[0]) * dx + (py - a[1]) * dy) / len2));
+    const cx = a[0] + t * dx - px,
+      cy = a[1] + t * dy - py;
+    const d = cx * cx + cy * cy;
+    if (d < minDist) {
+      minDist = d;
+      bestEdge = i;
+    }
+  }
+  // Reflect angle off the nearest edge
+  const a = hull[bestEdge],
+    b = hull[(bestEdge + 1) % hull.length];
+  const edgeAngle = Math.atan2(b[1] - a[1], b[0] - a[0]);
+  return 2 * edgeAngle - angle;
+}
+
 // --- Scene update (called every frame via setCustomMovement) ---
 
 function updatePlatonicGeometry() {
@@ -146,16 +193,10 @@ function updatePlatonicGeometry() {
   rotX += ROT_X_SPEED;
   rotZ += ROT_Z_SPEED;
   orbitAngle += ORBIT_SPEED;
-  frameCount++;
 
   const { width, height } = viewport();
   const cx = width / 2;
   const cy = height / 2;
-
-  // Nudge player position by sub-pixel amount each frame so updatePlay()
-  // detects a change and updates audio (it early-returns if position is identical)
-  player.set(cx + Math.sin(frameCount * 0.01) * 0.01, cy + Math.cos(frameCount * 0.01) * 0.01);
-  updatePrimaryRays();
   const scale = Math.min(width, height) * 0.35;
 
   // Offset the solid's center from the player — breaks symmetry for audio variation
@@ -177,10 +218,10 @@ function updatePlatonicGeometry() {
     projected.push(project(v, solidCx, solidCy, scale));
   }
 
-  // Compute convex hull of projected points — only hull edges become walls
+  // Compute convex hull — only hull edges become walls
   const hull = convexHull(projected);
 
-  // Build all edges for visual drawing (stored separately, not as walls)
+  // Build visual-only inner edges
   const edges = solidB.edges;
   innerEdges.length = 0;
   for (let i = 0; i < edges.length; i++) {
@@ -193,7 +234,7 @@ function updatePlatonicGeometry() {
     innerEdges.push([p1[0], p1[1], p2[0], p2[1]]);
   }
 
-  // Hull edges become walls (Scene.finishedLines) — rays bounce off these
+  // Hull edges become walls
   Scene.finishedLines.length = 0;
   for (let i = 0; i < hull.length; i++) {
     const p1 = hull[i];
@@ -202,6 +243,36 @@ function updatePlatonicGeometry() {
     line.width = 3;
     Scene.finishedLines.push(line);
   }
+
+  // --- Player bouncing movement inside hull ---
+  burstTimer++;
+  if (burstTimer > BURST_INTERVAL + BURST_DURATION) burstTimer = 0;
+  const speed = burstTimer > BURST_INTERVAL ? BURST_SPEED : BASE_SPEED;
+
+  // Gently curve the path
+  playerAngle += (Math.random() - 0.5) * TURN_RATE * 2;
+
+  let nx = player.x + Math.cos(playerAngle) * speed;
+  let ny = player.y + Math.sin(playerAngle) * speed;
+
+  // Bounce off hull walls
+  if (hull.length >= 3 && !isInsideHull(nx, ny, hull)) {
+    playerAngle = reflectOffHull(nx, ny, hull, playerAngle);
+    nx = player.x + Math.cos(playerAngle) * speed;
+    ny = player.y + Math.sin(playerAngle) * speed;
+    // If still outside (corner case), snap toward hull center
+    if (!isInsideHull(nx, ny, hull)) {
+      nx = solidCx;
+      ny = solidCy;
+    }
+  }
+
+  // Fallback: keep inside canvas
+  nx = Math.max(20, Math.min(width - 20, nx));
+  ny = Math.max(20, Math.min(height - 20, ny));
+
+  player.set(nx, ny);
+  updatePrimaryRays();
 }
 
 // --- Initial setup ---
