@@ -12,9 +12,9 @@ import Scene from './scene';
 import { ctx } from './canvas';
 import { viewport } from './util/browser-util';
 
-const TEXT_FONT = '15px Georgia, serif';
+const TEXT_FONT = '45px Georgia, serif';
 const TEXT_COLOR = 'rgba(180, 180, 180, 0.85)';
-const LINE_HEIGHT = 22;
+const LINE_HEIGHT = 58;
 const MARGIN = 30;
 
 const SAMPLE_TEXT =
