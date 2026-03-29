@@ -25,6 +25,7 @@ let rotZ = 0;
 let orbitAngle = 0;
 let paddedSolids = [];
 let innerEdges = []; // visual-only edges (not walls)
+let currentHull = []; // latest convex hull for external consumers
 
 // Player bouncing movement state
 let playerAngle = Math.random() * Math.PI * 2;
@@ -220,6 +221,7 @@ function updatePlatonicGeometry() {
 
   // Compute convex hull — only hull edges become walls
   const hull = convexHull(projected);
+  currentHull = hull;
 
   // Build visual-only inner edges
   const edges = solidB.edges;
@@ -312,4 +314,15 @@ function drawInnerEdges(canvasCtx) {
   canvasCtx.restore();
 }
 
-export { generatePlatonicEnvironment, updatePlatonicGeometry, getCurrentSolidName, drawInnerEdges };
+// Get current hull as {x, y} objects (for pretext compatibility)
+function getHull() {
+  return currentHull.map(p => ({ x: p[0], y: p[1] }));
+}
+
+export {
+  generatePlatonicEnvironment,
+  updatePlatonicGeometry,
+  getCurrentSolidName,
+  drawInnerEdges,
+  getHull,
+};

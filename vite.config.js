@@ -14,10 +14,11 @@ export default defineConfig({
         cayley: resolve(__dirname, 'cayley.html'),
         camera: resolve(__dirname, 'camera.html'),
         platonic: resolve(__dirname, 'platonic.html'),
+        'platonic-text': resolve(__dirname, 'platonic-text.html'),
       },
     },
   },
   server: {
-    open: true
-  }
+    open: true,
+  },
 });
