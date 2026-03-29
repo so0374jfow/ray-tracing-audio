@@ -125,18 +125,8 @@ function genWedge() {
   const cos = Math.cos(rot);
   const sin = Math.sin(rot);
   // Two walls meeting at a point, rotated randomly
-  addWall(
-    cx + (-spread) * cos,
-    cy + (-spread) * sin,
-    cx + depth * -sin,
-    cy + depth * cos
-  );
-  addWall(
-    cx + spread * cos,
-    cy + spread * sin,
-    cx + depth * -sin,
-    cy + depth * cos
-  );
+  addWall(cx + -spread * cos, cy + -spread * sin, cx + depth * -sin, cy + depth * cos);
+  addWall(cx + spread * cos, cy + spread * sin, cx + depth * -sin, cy + depth * cos);
   // Circle on the opposite side of the wedge opening
   Scene.circles.push(
     new Circle(new Point(cx - depth * 0.7 * -sin, cy - depth * 0.7 * cos), rand(45, 70))

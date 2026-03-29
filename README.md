@@ -7,7 +7,6 @@ https://justgoscha.github.io/ray-tracing-audio/
 
 https://github.com/user-attachments/assets/1526e4f9-4a53-44aa-b299-3d05975732a6
 
-
 ## Description
 
 Ray Tracing Audio is a web-based sound propagation engine that simulates how sound travels through spaces. It uses ray tracing techniques to model sound reflections and propagation, with binaural audio output capabilities for immersive 3D audio experiences.
@@ -26,6 +25,7 @@ Ray Tracing Audio is a web-based sound propagation engine that simulates how sou
 ## Installation
 
 1. Clone the repository:
+
    ```
    git clone https://github.com/yourusername/ray-tracing-audio.git
    cd ray-tracing-audio
@@ -39,16 +39,19 @@ Ray Tracing Audio is a web-based sound propagation engine that simulates how sou
 ## Running the Project
 
 1. Build the project:
+
    ```
    npm run build
    ```
 
 2. For development with automatic rebuilds:
+
    ```
    npm run watch
    ```
 
 3. To build and get instructions for viewing:
+
    ```
    npm start
    ```
@@ -68,6 +71,7 @@ Ray Tracing Audio is a web-based sound propagation engine that simulates how sou
 ## Development
 
 The project uses:
+
 - Gulp for building
 - Babel for ES6+ transpilation
 - Browserify for bundling

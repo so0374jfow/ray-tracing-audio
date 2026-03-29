@@ -1,18 +1,18 @@
-@CHARSET "UTF-8";
+@charset "UTF-8";
 
 * {
-	margin: 0px;
-	padding: 0px;
-	box-sizing: border-box;
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
 }
 
-body{
-/*	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+body {
+  /*	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 	min-height:100%;
 	height: 100%;
 	line-height: 1.5em;
 	color: #333333;*/
-	background-color: #ffe3dc;	
+  background-color: #ffe3dc;
 }
 
 h1,
@@ -36,7 +36,7 @@ h6 {
 .clearfix:before,
 .clearfix:after {
   display: table;
-  content: "";
+  content: '';
   line-height: 0;
 }
 .clearfix:after {
@@ -113,23 +113,23 @@ img {
   -ms-interpolation-mode: bicubic;
 }
 
-
 /* Generic classes */
-.hide { /* Hide stuff without resorting to display:none; */
-	visibility: hidden !important;
-	width: 0 !important;
-	height: 0 !important;
-	line-height: 0 !important;
-	padding: 0 !important;
-	margin: 0 !important;
+.hide {
+  /* Hide stuff without resorting to display:none; */
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  line-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
-.hide:after { /* Hide stuff without resorting to display:none; */
-	visibility: hidden !important;
-	width: 0 !important;
-	height: 0 !important;
-	line-height: 0 !important;
-	padding: 0 !important;
-	margin: 0 !important;
+.hide:after {
+  /* Hide stuff without resorting to display:none; */
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  line-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
-

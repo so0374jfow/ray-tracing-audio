@@ -33,14 +33,14 @@ function initWebcam() {
 
   navigator.mediaDevices
     .getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } })
-    .then((stream) => {
+    .then(stream => {
       videoElement.srcObject = stream;
       videoElement.addEventListener('loadedmetadata', () => {
         webcamReady = true;
         updateTimer = setInterval(processFrame, UPDATE_INTERVAL);
       });
     })
-    .catch((err) => {
+    .catch(err => {
       console.warn('Webcam access denied:', err.message);
     });
 }

@@ -14,7 +14,7 @@ import { updatePrimaryRays } from './shoot-rays';
 // Node layout: positions relative to a unit square [-1, 1] x [-1, 1]
 // Arranged to suggest the Q8 structure with 4-fold symmetry
 const NODE_LAYOUT = {
-  '1': [0, -0.15],
+  1: [0, -0.15],
   '-1': [0, 0.15],
   i: [-0.45, 0],
   '-i': [0.45, 0],
@@ -130,7 +130,8 @@ function ease(x) {
 
 // Compute centroid of a cycle's nodes (used as arc attractor)
 function cycleCentroid(cycle) {
-  let sx = 0, sy = 0;
+  let sx = 0,
+    sy = 0;
   for (const name of cycle.nodes) {
     sx += nodePositions[name].x;
     sy += nodePositions[name].y;

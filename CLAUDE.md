@@ -56,6 +56,7 @@ js/
 ## CI/CD
 
 GitHub Actions (`.github/workflows/deploy.yml`) deploys to GitHub Pages on push to `main`:
+
 1. `npm ci` → `npm run build` → upload `dist/` → deploy to Pages
 
 ## Key Details

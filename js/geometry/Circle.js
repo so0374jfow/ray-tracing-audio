@@ -1,39 +1,20 @@
-import colors from '../misc/colors'
+import colors from '../misc/colors';
 
 class Circle {
   constructor(center, radius) {
-    this.center = center
-    this.radius = radius
+    this.center = center;
+    this.radius = radius;
   }
 
   draw(ctx, color) {
-    ctx.beginPath()
-    const {x,y} = this.center
-    ctx.lineWidth = 2
-    ctx.arc(x,y,this.radius,0,2*Math.PI)
-    ctx.strokeStyle = this.color || colors.circle
-    ctx.stroke()
-    ctx.closePath()
+    ctx.beginPath();
+    const { x, y } = this.center;
+    ctx.lineWidth = 2;
+    ctx.arc(x, y, this.radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = this.color || colors.circle;
+    ctx.stroke();
+    ctx.closePath();
   }
 }
 
-export default Circle
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export default Circle;

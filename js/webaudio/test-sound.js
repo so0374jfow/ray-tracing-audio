@@ -1,11 +1,10 @@
-import {audioCtx} from './webaudio'
-import {masterChannel} from './master'
-import {panners} from './endpoints'
-import Scene from './../scene'
-import * as SoundUtils from './sound-util'
-import player from '../player'
-import {numberOfRays} from '../config.js'
-
+import { audioCtx } from './webaudio';
+import { masterChannel } from './master';
+import { panners } from './endpoints';
+import Scene from './../scene';
+import * as SoundUtils from './sound-util';
+import player from '../player';
+import { numberOfRays } from '../config.js';
 
 var noise = SoundUtils.createNoise(0.3);
 var s440 = SoundUtils.createSine(440, 0.5);
@@ -13,66 +12,64 @@ var s560 = SoundUtils.createSine(560, 0.4);
 
 var playing = false;
 
-function playSound(){
-  if(playing){
-
+function playSound() {
+  if (playing) {
   } else {
     startBuffer(noise, 0);
-    playing=true;
+    playing = true;
   }
 }
 
 var sounds = new Array(panners.length);
-var sixteeth = audioCtx.sampleRate/60;
-var noise = SoundUtils.createNoise(.4);
+var sixteeth = audioCtx.sampleRate / 60;
+var noise = SoundUtils.createNoise(0.4);
 
-function playAllSounds(){
-  for(var i = 0; i< Scene._distances.length; i++){
+function playAllSounds() {
+  for (var i = 0; i < Scene._distances.length; i++) {
     var d = Scene._distances[i];
-    if(d>400){
-      sounds[i] = SoundUtils.createNoise(1000/(d*d));
+    if (d > 400) {
+      sounds[i] = SoundUtils.createNoise(1000 / (d * d));
     } else {
-      sounds[i] = SoundUtils.createSine(10000/d, d/300);
+      sounds[i] = SoundUtils.createSine(10000 / d, d / 300);
     }
   }
 
-  for(var i = 0; i<sounds.length; i++){
+  for (var i = 0; i < sounds.length; i++) {
     startBuffer(sounds[i], i);
   }
 }
 
-function soundFromDistance(d){
+function soundFromDistance(d) {
   // if(d>500){
   //   return SoundUtils.createNoise(1000/(d*d), length);
   // } else {
-    var freq = 20000/d;
-    var length = audioCtx.sampleRate/freq;
-    return SoundUtils.createSine(freq, d/500, length);
+  var freq = 20000 / d;
+  var length = audioCtx.sampleRate / freq;
+  return SoundUtils.createSine(freq, d / 500, length);
   // }
 }
 
 var soundsPlaying = false;
 
-
-var lastPosition = {x: 0, y: 0};
+var lastPosition = { x: 0, y: 0 };
 var oscillators = new Array(panners.length);
 var gains = new Array(panners.length);
 
-for(var i = 0; i<gains.length; i++){
+for (var i = 0; i < gains.length; i++) {
   gains[i] = audioCtx.createGain();
   gains[i].connect(masterChannel);
 }
 
-function toggleContinuous(){
+function toggleContinuous() {
   soundsPlaying = !soundsPlaying;
-  if(soundsPlaying){
-    for(var i = 0; i<gains.length; i++){
+  if (soundsPlaying) {
+    for (var i = 0; i < gains.length; i++) {
       oscillators[i] = audioCtx.createOscillator();
       oscillators[i].connect(gains[i]);
       oscillators[i].start();
     }
   } else {
-    for(var osc of oscillators){
+    for (var osc of oscillators) {
       osc.stop();
     }
   }
@@ -94,17 +91,17 @@ function quadrantMean(distances, start) {
 
 // Sign pattern per quadrant (mirrors quaternion multiplication i,j,k axes)
 const Q_SIGNS = [
-  [1, 1, 1],   // Q0: +i +j +k
-  [-1, 1, -1],  // Q1: -i +j -k
-  [-1, -1, 1],  // Q2: -i -j +k
-  [1, -1, -1],  // Q3: +i -j -k
+  [1, 1, 1], // Q0: +i +j +k
+  [-1, 1, -1], // Q1: -i +j -k
+  [-1, -1, 1], // Q2: -i -j +k
+  [1, -1, -1], // Q3: +i -j -k
 ];
 
-function updatePlay(){
+function updatePlay() {
   if (!soundsPlaying) return;
   if (lastPosition.x === player.x && lastPosition.y === player.y) return;
 
-  lastPosition = {x: player.x, y: player.y};
+  lastPosition = { x: player.x, y: player.y };
 
   const pd = Scene._primaryDistances;
   if (!pd || pd.length < numberOfRays) return;
@@ -155,14 +152,13 @@ function updatePlay(){
   }
 }
 
-
-function startBuffer(buffer, channel){
+function startBuffer(buffer, channel) {
   var node = SoundUtils.createNodeFromBuffer(buffer);
   node.connect(panners[channel]);
   node.start();
-  node.onended = function(){
+  node.onended = function () {
     playing = false;
   };
 }
 
-export {playSound, playAllSounds, updatePlay, toggleContinuous}
+export { playSound, playAllSounds, updatePlay, toggleContinuous };
