@@ -10,6 +10,7 @@ const meshes = [];
 const objectColors = {
   box: 0xcc6644,
   sphere: 0x4466cc,
+  wall: 0x99887a,
 };
 
 export function addBox(scene, x, y, z, w = 2, h = 2, d = 2, material = 'wood') {
@@ -33,6 +34,46 @@ export function addBox(scene, x, y, z, w = 2, h = 2, d = 2, material = 'wood') {
     type: 'box',
     min: { x: x - halfW, y: y - halfH, z: z - halfD },
     max: { x: x + halfW, y: y + halfH, z: z + halfD },
+    material,
+    mesh,
+  };
+  objects.push(obj);
+  setSceneObjects(objects);
+  invalidateCache();
+  return obj;
+}
+
+// Thin wall: a tall flat box (like a partition wall)
+export function addWall(scene, x, z, length = 8, height = 8, angle = 0, material = 'concrete') {
+  const thickness = 0.3;
+  const geo = new THREE.BoxGeometry(length, height, thickness);
+  const mat = new THREE.MeshStandardMaterial({
+    color: objectColors.wall,
+    roughness: 0.85,
+    metalness: 0.05,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, height / 2, z);
+  mesh.rotation.y = angle;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+  meshes.push(mesh);
+
+  // Compute AABB from rotated box
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const halfL = length / 2;
+  const halfT = thickness / 2;
+  const halfH = height / 2;
+  // Rotated extents in XZ
+  const extX = Math.abs(cos * halfL) + Math.abs(sin * halfT);
+  const extZ = Math.abs(sin * halfL) + Math.abs(cos * halfT);
+
+  const obj = {
+    type: 'box',
+    min: { x: x - extX, y: 0, z: z - extZ },
+    max: { x: x + extX, y: height, z: z + extZ },
     material,
     mesh,
   };

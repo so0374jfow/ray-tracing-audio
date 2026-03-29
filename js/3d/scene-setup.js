@@ -37,23 +37,31 @@ export function createScene() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x1a1a24);
 
-  // Ambient light -- bright enough to see walls
-  const ambient = new THREE.AmbientLight(0x8888aa, 1.2);
+  // Ambient light -- bright enough to see walls in a big room
+  const ambient = new THREE.AmbientLight(0x9999bb, 1.8);
   scene.add(ambient);
 
   // Point light at center-top of room
-  const pointLight = new THREE.PointLight(0xffeedd, 2, 50);
-  pointLight.position.set(0, 8, 0);
+  const pointLight = new THREE.PointLight(0xffeedd, 3, 80);
+  pointLight.position.set(0, 18, 0);
   pointLight.castShadow = true;
   scene.add(pointLight);
 
-  // Second point light lower for fill
-  const fillLight = new THREE.PointLight(0xccccff, 1, 40);
-  fillLight.position.set(5, 3, 5);
-  scene.add(fillLight);
+  // Four fill lights in corners for even coverage
+  const fillPositions = [
+    [-12, 8, -12],
+    [12, 8, -12],
+    [-12, 8, 12],
+    [12, 8, 12],
+  ];
+  for (const pos of fillPositions) {
+    const fill = new THREE.PointLight(0xccccff, 1.2, 50);
+    fill.position.set(pos[0], pos[1], pos[2]);
+    scene.add(fill);
+  }
 
   // Hemisphere light for natural feel
-  const hemiLight = new THREE.HemisphereLight(0xaaaadd, 0x666644, 0.8);
+  const hemiLight = new THREE.HemisphereLight(0xbbbbee, 0x888866, 1.0);
   scene.add(hemiLight);
 
   return scene;

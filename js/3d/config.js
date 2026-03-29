@@ -4,13 +4,13 @@ export const numberOfRays = 64;
 export const maxBounces = 8;
 
 // Room dimensions in meters
-export const roomWidth = 20;
-export const roomHeight = 10;
-export const roomDepth = 20;
+export const roomWidth = 40;
+export const roomHeight = 20;
+export const roomDepth = 40;
 
 // Audio
 export const pixelMeterRatio = 1; // 3D units are meters directly
-export const distClamp = 50; // max distance for audio calculations (meters)
+export const distClamp = 100; // max distance for audio calculations (meters)
 export const smoothTime = 0.02; // audio parameter ramp time (seconds)
 
 // Movement

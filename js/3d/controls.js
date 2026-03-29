@@ -20,13 +20,13 @@ export function initControls(camera, domElement) {
   controls.enableDamping = true;
   controls.dampingFactor = 0.1;
   controls.minDistance = 0.5;
-  controls.maxDistance = 25;
+  controls.maxDistance = 50;
   controls.maxPolarAngle = Math.PI * 0.95;
   controls.minPolarAngle = Math.PI * 0.05;
   controls.target.copy(playerPos);
 
   // Start camera looking at center from a reasonable angle
-  camera.position.set(8, 8, 8);
+  camera.position.set(15, 15, 15);
   controls.update();
 
   // Activate on first interaction

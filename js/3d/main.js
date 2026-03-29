@@ -17,6 +17,7 @@ import {
 import { initAudio, toggleAudio, updateAudio, isAudioPlaying } from './audio/audio-bridge.js';
 import {
   addBox,
+  addWall,
   addSphere,
   placeAtCameraTarget,
   removeLastObject,
@@ -96,15 +97,43 @@ async function init() {
   // Audio
   initAudio();
 
-  // Add some default objects to make the scene interesting
-  addBox(scene, -4, 1, -4, 2, 2, 2, 'wood');
-  addBox(scene, 5, 1.5, 3, 3, 3, 1, 'metal');
-  addSphere(scene, 3, 1.5, -5, 1.5, 'glass');
-  addSphere(scene, -6, 2, 6, 2, 'metal');
+  // Add interior walls to divide the space
+  addWall(scene, -6, 0, 12, 10, 0, 'concrete'); // wall along X axis
+  addWall(scene, 8, -5, 10, 10, Math.PI / 2, 'concrete'); // wall along Z axis
+  addWall(scene, 4, 10, 14, 10, Math.PI / 4, 'wood'); // angled wall
+  addWall(scene, -10, 10, 8, 10, -Math.PI / 6, 'concrete'); // another angled wall
+  addBox(scene, 12, 2.5, -10, 5, 5, 5, 'metal'); // a pillar-like box
+
+  // Auto-start audio on first interaction
+  let audioStarted = false;
+  const startAudioOnce = () => {
+    if (audioStarted) return;
+    audioStarted = true;
+    toggleAudio();
+  };
+  document.addEventListener('pointerdown', startAudioOnce, { once: true });
+  document.addEventListener('touchstart', startAudioOnce, { once: true });
+
+  // Mobile audio toggle button
+  const audioBtn = document.createElement('div');
+  audioBtn.textContent = '\u266B';
+  audioBtn.style.cssText =
+    'position:fixed;bottom:20px;right:20px;width:50px;height:50px;border-radius:50%;' +
+    'background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);color:#fff;' +
+    'font-size:22px;display:flex;align-items:center;justify-content:center;z-index:20;cursor:pointer;';
+  audioBtn.addEventListener('click', () => toggleAudio());
+  audioBtn.addEventListener(
+    'touchstart',
+    e => {
+      e.preventDefault();
+      toggleAudio();
+    },
+    { passive: false }
+  );
+  document.body.appendChild(audioBtn);
 
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
-    if (!isControlsActive()) return;
     switch (e.code) {
       case 'KeyV':
         toggleAudio();
