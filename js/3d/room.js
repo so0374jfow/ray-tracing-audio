@@ -83,7 +83,7 @@ export function createRoomMeshes(scene) {
   // Floor
   const floorGeo = new THREE.PlaneGeometry(roomWidth, roomDepth);
   const floorMat = new THREE.MeshStandardMaterial({
-    color: 0x333338,
+    color: 0x666670,
     roughness: 0.9,
     metalness: 0.1,
   });
@@ -100,7 +100,7 @@ export function createRoomMeshes(scene) {
   // Ceiling
   const ceilGeo = new THREE.PlaneGeometry(roomWidth, roomDepth);
   const ceilMat = new THREE.MeshStandardMaterial({
-    color: 0x222228,
+    color: 0x555560,
     roughness: 0.95,
     side: THREE.DoubleSide,
   });
@@ -112,12 +112,10 @@ export function createRoomMeshes(scene) {
 
   // Walls
   const wallMat = new THREE.MeshStandardMaterial({
-    color: 0x2a2a32,
+    color: 0x667788,
     roughness: 0.85,
     metalness: 0.05,
     side: THREE.DoubleSide,
-    transparent: true,
-    opacity: 0.85,
   });
 
   // Left wall

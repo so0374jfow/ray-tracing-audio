@@ -35,21 +35,25 @@ export async function createRenderer(canvas) {
 
 export function createScene() {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x111118);
-  scene.fog = new THREE.Fog(0x111118, 30, 60);
+  scene.background = new THREE.Color(0x1a1a24);
 
-  // Ambient light
-  const ambient = new THREE.AmbientLight(0x404060, 0.5);
+  // Ambient light -- bright enough to see walls
+  const ambient = new THREE.AmbientLight(0x8888aa, 1.2);
   scene.add(ambient);
 
   // Point light at center-top of room
-  const pointLight = new THREE.PointLight(0xffeedd, 1, 40);
+  const pointLight = new THREE.PointLight(0xffeedd, 2, 50);
   pointLight.position.set(0, 8, 0);
   pointLight.castShadow = true;
   scene.add(pointLight);
 
+  // Second point light lower for fill
+  const fillLight = new THREE.PointLight(0xccccff, 1, 40);
+  fillLight.position.set(5, 3, 5);
+  scene.add(fillLight);
+
   // Hemisphere light for natural feel
-  const hemiLight = new THREE.HemisphereLight(0x8888cc, 0x444422, 0.3);
+  const hemiLight = new THREE.HemisphereLight(0xaaaadd, 0x666644, 0.8);
   scene.add(hemiLight);
 
   return scene;

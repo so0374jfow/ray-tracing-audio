@@ -1,7 +1,13 @@
 import * as THREE from 'three';
 import { createRenderer, createScene, createCamera, handleResize } from './scene-setup.js';
 import { createRoomMeshes } from './room.js';
-import { initControls, updateControls, isControlsActive, isMobileDevice } from './controls.js';
+import {
+  initControls,
+  updateControls,
+  isControlsActive,
+  isMobileDevice,
+  getPlayerPosition,
+} from './controls.js';
 import { traceAllRays } from './ray-tracing/trace.js';
 import {
   createRayVisualization,
@@ -39,22 +45,21 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Set overlay content (different text for mobile vs desktop)
+// Set overlay content
 const overlay = document.getElementById('overlay');
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 if (overlay) {
   overlay.innerHTML = isMobile
     ? `<div class="instructions">
     Tap to start<br>
-    Left joystick to move<br>
-    Right side to look around
+    Drag to orbit &middot; Pinch to zoom<br>
+    Two-finger drag to pan
   </div>`
     : `<div class="instructions">
     Click to start<br>
-    <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> to move<br>
-    Mouse to look around<br>
+    Drag to orbit &middot; Scroll to zoom &middot; Right-drag to pan<br>
     <kbd>V</kbd> toggle audio &nbsp; <kbd>R</kbd> toggle rays<br>
-    <kbd>1</kbd> place box &nbsp; <kbd>2</kbd> place sphere &nbsp; <kbd>Esc</kbd> release cursor
+    <kbd>1</kbd> place box &nbsp; <kbd>2</kbd> place sphere
   </div>`;
 }
 
@@ -132,30 +137,23 @@ function animate() {
   // Update movement
   updateControls(camera, delta);
 
-  // Get camera vectors for audio and ray tracing
+  // Rays trace from the orbit target (player position), not camera
+  const position = getPlayerPosition();
+
+  // Camera direction for audio listener
   camera.getWorldDirection(cameraForward);
   cameraUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
-
-  // Trace rays from camera position
-  const position = {
-    x: camera.position.x,
-    y: camera.position.y,
-    z: camera.position.z,
-  };
-  const forward = {
-    x: cameraForward.x,
-    y: cameraForward.y,
-    z: cameraForward.z,
-  };
+  const forward = { x: cameraForward.x, y: cameraForward.y, z: cameraForward.z };
 
   const traceResults = traceAllRays(position, forward);
 
   // Update visualization
   updateRayVisualization(traceResults);
 
-  // Update audio
+  // Update audio (listener at camera position for correct HRTF)
+  const camPos = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
   const up = { x: cameraUp.x, y: cameraUp.y, z: cameraUp.z };
-  updateAudio(traceResults, position, forward, up);
+  updateAudio(traceResults, camPos, forward, up);
 
   // Render
   renderer.render(scene, camera);
