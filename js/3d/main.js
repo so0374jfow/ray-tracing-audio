@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { createRenderer, createScene, createCamera, handleResize } from './scene-setup.js';
 import { createRoomMeshes } from './room.js';
-import { initControls, updateControls, isPointerLocked } from './controls.js';
+import { initControls, updateControls, isControlsActive, isMobileDevice } from './controls.js';
 import { traceAllRays } from './ray-tracing/trace.js';
 import {
   createRayVisualization,
@@ -39,10 +39,17 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Set overlay content
+// Set overlay content (different text for mobile vs desktop)
 const overlay = document.getElementById('overlay');
+const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 if (overlay) {
-  overlay.innerHTML = `<div class="instructions">
+  overlay.innerHTML = isMobile
+    ? `<div class="instructions">
+    Tap to start<br>
+    Left joystick to move<br>
+    Right side to look around
+  </div>`
+    : `<div class="instructions">
     Click to start<br>
     <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> to move<br>
     Mouse to look around<br>
@@ -92,7 +99,7 @@ async function init() {
 
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
-    if (!isPointerLocked()) return;
+    if (!isControlsActive()) return;
     switch (e.code) {
       case 'KeyV':
         toggleAudio();
