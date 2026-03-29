@@ -15,6 +15,7 @@ export default defineConfig({
         camera: resolve(__dirname, 'camera.html'),
         platonic: resolve(__dirname, 'platonic.html'),
         'platonic-text': resolve(__dirname, 'platonic-text.html'),
+        '3d': resolve(__dirname, '3d.html'),
       },
     },
   },
