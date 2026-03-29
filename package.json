@@ -19,6 +19,10 @@
     "postcss": "^8.5.4",
     "prettier": "^3.2.5",
     "tailwindcss": "^4.1.8",
+    "typescript": "^6.0.2",
     "vite": "^5.1.4"
+  },
+  "dependencies": {
+    "@chenglou/pretext": "^0.0.2"
   }
 }
