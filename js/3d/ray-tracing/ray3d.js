@@ -17,5 +17,7 @@ export class TraceResult {
     this.accumulatedAbsorption = 1.0; // 1.0 = full energy, decreases with each bounce
     this.hitCount = 0;
     this.finalDirection = { x: 0, y: 0, z: 0 };
+    this.occlusionFactor = 1.0; // 1.0 = fully visible, 0.0 = fully occluded
+    this.firstHitDistance = Infinity; // distance to first surface hit
   }
 }

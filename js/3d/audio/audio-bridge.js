@@ -3,15 +3,15 @@ import { masterChannel } from '../../webaudio/master.js';
 import { numberOfRays, distClamp, smoothTime } from '../config.js';
 import { panners, createPanners3D } from './panners3d.js';
 
-// Oscillators and gains, one per ray (same pattern as test-sound.js)
+// Oscillators, gains, and lowpass filters -- one per ray
 let oscillators = new Array(numberOfRays);
 let gains = new Array(numberOfRays);
+let filters = new Array(numberOfRays); // BiquadFilter for muffling
 let soundsPlaying = false;
 
-// 8 octants for 3D quaternion-style modulation (extends 2D's 4 quadrants)
+// 8 octants for 3D modulation
 const OCTANT_SIZE = Math.ceil(numberOfRays / 8);
 
-// Signs for octant modulation (extends Q_SIGNS from test-sound.js to 3D)
 const OCTANT_SIGNS = [
   [1, 1, 1],
   [-1, 1, 1],
@@ -37,8 +37,17 @@ export function initAudio() {
   createPanners3D();
 
   for (let i = 0; i < numberOfRays; i++) {
+    // Lowpass filter for occlusion muffling
+    filters[i] = audioCtx.createBiquadFilter();
+    filters[i].type = 'lowpass';
+    filters[i].frequency.value = 20000; // fully open
+    filters[i].Q.value = 0.7;
+
     gains[i] = audioCtx.createGain();
     gains[i].gain.value = 0;
+
+    // Chain: oscillator -> filter -> gain -> master
+    filters[i].connect(gains[i]);
     gains[i].connect(masterChannel);
   }
 }
@@ -47,13 +56,12 @@ export function toggleAudio() {
   soundsPlaying = !soundsPlaying;
 
   if (soundsPlaying) {
-    // Resume context if suspended (browser autoplay policy)
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
     for (let i = 0; i < numberOfRays; i++) {
       oscillators[i] = audioCtx.createOscillator();
-      oscillators[i].connect(gains[i]);
+      oscillators[i].connect(filters[i]);
       oscillators[i].start();
     }
   } else {
@@ -99,7 +107,7 @@ export function updateAudio(traceResults, cameraPosition, cameraForward, cameraU
     distances[i] = traceResults[i].totalDistance;
   }
 
-  // Compute octant means (extends quadrant approach from test-sound.js)
+  // Compute octant means
   const means = [];
   for (let o = 0; o < 8; o++) {
     means.push(octantMean(distances, o * OCTANT_SIZE));
@@ -108,7 +116,7 @@ export function updateAudio(traceResults, cameraPosition, cameraForward, cameraU
   // Overall mean distance
   const w = Math.max(means.reduce((a, b) => a + b, 0) / 8, 1);
 
-  // Octant-based harmonic components (extends qi/qj/qk from test-sound.js)
+  // Octant-based harmonic components
   const baseFreq = 20000 / w;
   const iOffset = (((means[0] + means[2] + means[4] + means[6]) / 4 - w) / w) * 200;
   const jOffset = (((means[0] + means[1] + means[4] + means[5]) / 4 - w) / w) * 150;
@@ -119,20 +127,23 @@ export function updateAudio(traceResults, cameraPosition, cameraForward, cameraU
   for (let i = 0; i < numberOfRays; i++) {
     const osc = oscillators[i];
     const gain = gains[i];
-    if (!osc || !gain) continue;
+    const filter = filters[i];
+    if (!osc || !gain || !filter) continue;
 
     const d = Math.min(distances[i], distClamp);
     const absorption = traceResults[i].accumulatedAbsorption;
+    const occlusion = traceResults[i].occlusionFactor;
 
     if (d >= distClamp) {
       osc.frequency.setTargetAtTime(0, now, smoothTime);
       gain.gain.setTargetAtTime(0, now, smoothTime);
+      filter.frequency.setTargetAtTime(20000, now, smoothTime);
       continue;
     }
 
     const rawFreq = 20000 / d;
 
-    // Octant modulation (extends quadrant blend from test-sound.js)
+    // Octant modulation
     const octIdx = Math.min(Math.floor(i / OCTANT_SIZE), 7);
     const signs = OCTANT_SIGNS[octIdx];
     const qWeight = signs[0] * iOffset + signs[1] * jOffset + signs[2] * kOffset;
@@ -140,11 +151,18 @@ export function updateAudio(traceResults, cameraPosition, cameraForward, cameraU
 
     osc.frequency.setTargetAtTime(freq, now, smoothTime);
 
-    // Gain: distance + absorption
+    // Gain: distance + absorption + occlusion
     const distGain = Math.min(d / (distClamp * 100), 0.3);
     const absGain = absorption;
-    const totalGain = distGain * absGain * Math.min(w / (distClamp * 10), 1.0);
+    const occGain = 0.3 + 0.7 * occlusion; // occluded rays are quieter but not silent
+    const totalGain = distGain * absGain * occGain * Math.min(w / (distClamp * 10), 1.0);
     gain.gain.setTargetAtTime(totalGain, now, smoothTime);
+
+    // Lowpass muffling: occluded rays get muffled (lower cutoff frequency)
+    // occlusion 1.0 = fully visible = 20kHz (no muffling)
+    // occlusion 0.0 = fully blocked = 300Hz (heavy muffling)
+    const cutoff = 300 + occlusion * 19700;
+    filter.frequency.setTargetAtTime(cutoff, now, smoothTime);
   }
 }
 

@@ -10,6 +10,8 @@ import {
   getOrbitControls,
 } from './controls.js';
 import { traceAllRays } from './ray-tracing/trace.js';
+import { initGPUTrace, isGPUReady, gpuTraceAllRays } from './ray-tracing/gpu-trace.js';
+import { getObjects } from './objects/scene-objects.js';
 import {
   createRayVisualization,
   updateRayVisualization,
@@ -73,6 +75,8 @@ let clock;
 const fpsEl = document.getElementById('fps');
 let frameCount = 0;
 let lastFpsTime = 0;
+let gpuPending = false;
+let latestGPUResults = null;
 
 // Camera direction helpers
 const cameraForward = new THREE.Vector3();
@@ -103,6 +107,11 @@ async function init() {
 
   // Audio
   initAudio();
+
+  // GPU ray tracing (falls back to CPU if unavailable)
+  initGPUTrace().then(ok => {
+    if (ok) console.log('GPU ray tracing active');
+  });
 
   // Add interior walls to divide the space
   addWall(scene, -6, 0, 12, 10, 0, 'concrete'); // wall along X axis
@@ -212,7 +221,21 @@ function animate() {
   cameraUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
   const forward = { x: cameraForward.x, y: cameraForward.y, z: cameraForward.z };
 
-  const traceResults = traceAllRays(position, forward);
+  // Use GPU ray tracing when available, CPU fallback otherwise
+  let traceResults;
+  if (isGPUReady()) {
+    // GPU tracing is async -- fire off request if not already pending
+    if (!gpuPending) {
+      gpuPending = true;
+      gpuTraceAllRays(position, getObjects()).then(results => {
+        if (results) latestGPUResults = results;
+        gpuPending = false;
+      });
+    }
+    traceResults = latestGPUResults || traceAllRays(position, forward);
+  } else {
+    traceResults = traceAllRays(position, forward);
+  }
 
   // Update visualization
   updateRayVisualization(traceResults);

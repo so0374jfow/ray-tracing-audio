@@ -68,18 +68,38 @@ function findNearest(origin, direction, skipObject) {
   return nearest;
 }
 
+// Line-of-sight check: can a point see the origin without obstruction?
+// Returns 1.0 if clear, 0.0 if fully blocked, partial for partial occlusion
+function checkLineOfSight(point, origin) {
+  const toOrigin = Vec3.subtract(origin, point);
+  const dist = Vec3.length(toOrigin);
+  if (dist < 0.01) return 1.0;
+
+  const dir = Vec3.scale(toOrigin, 1 / dist);
+  const offsetPoint = Vec3.add(point, Vec3.scale(dir, 0.01));
+  const hit = findNearest(offsetPoint, dir, null);
+
+  // If no hit or hit is beyond the origin, LOS is clear
+  if (!hit || hit.t >= dist - 0.02) return 1.0;
+
+  // Blocked -- return partial based on material (glass lets some through)
+  const absorption = getAbsorption(hit.material);
+  return absorption * 0.5; // more absorptive materials let more sound through when blocking
+}
+
 // Trace a single ray iteratively
 function traceSingleRay(index, origin, direction) {
   const result = new TraceResult(index);
   let currentOrigin = origin;
   let currentDir = direction;
   let skipObj = null;
+  let bestLOS = 0; // track best line-of-sight across all bounces
 
   for (let bounce = 0; bounce <= maxBounces; bounce++) {
     const hit = findNearest(currentOrigin, currentDir, skipObj);
 
     if (!hit) {
-      // Ray escapes (shouldn't happen in a closed room, but handle gracefully)
+      // Ray escapes
       const farPoint = Vec3.add(currentOrigin, Vec3.scale(currentDir, 100));
       result.segments.push({ start: Vec3.copy(currentOrigin), end: farPoint });
       result.totalDistance += 100;
@@ -90,18 +110,29 @@ function traceSingleRay(index, origin, direction) {
     result.totalDistance += hit.t;
     result.hitCount++;
 
+    // Track first hit distance
+    if (bounce === 0) {
+      result.firstHitDistance = hit.t;
+    }
+
     // Apply material absorption
     const absorption = getAbsorption(hit.material);
     result.accumulatedAbsorption *= 1 - absorption;
+
+    // Line-of-sight check from this bounce point back to player
+    // (Vercidium technique: check at each bounce if listener is visible)
+    const los = checkLineOfSight(hit.point, origin);
+    bestLOS = Math.max(bestLOS, los);
 
     if (bounce === maxBounces) break;
 
     // Reflect: R = V - 2(V.N)N
     currentDir = Vec3.reflect(currentDir, hit.normal);
-    currentOrigin = Vec3.add(hit.point, Vec3.scale(hit.normal, 1e-4)); // offset to avoid self-intersection
+    currentOrigin = Vec3.add(hit.point, Vec3.scale(hit.normal, 1e-4));
     skipObj = hit.object;
   }
 
+  result.occlusionFactor = bestLOS;
   result.finalDirection = currentDir;
   return result;
 }
