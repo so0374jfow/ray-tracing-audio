@@ -1,9 +1,6 @@
 import * as THREE from 'three';
 import { invalidateCache, setSceneObjects } from '../ray-tracing/trace.js';
 
-// Manages placeable 3D objects that participate in ray intersection
-// Each object has both a Three.js mesh (visual) and a logical shape (intersection)
-
 const objects = [];
 const meshes = [];
 
@@ -11,7 +8,115 @@ const objectColors = {
   box: 0xcc6644,
   sphere: 0x4466cc,
   wall: 0x99887a,
+  selected: 0xffcc00,
 };
+
+// Drag state
+let dragEnabled = false;
+let selectedObj = null;
+let selectedMesh = null;
+let originalColor = null;
+let isDragging = false;
+let dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+let dragOffset = new THREE.Vector3();
+let raycaster = new THREE.Raycaster();
+let pointer = new THREE.Vector2();
+let intersection = new THREE.Vector3();
+
+export function enableDragMode(enabled) {
+  dragEnabled = enabled;
+  if (!enabled && selectedMesh) {
+    deselectCurrent();
+  }
+}
+
+export function isDragMode() {
+  return dragEnabled;
+}
+
+function deselectCurrent() {
+  if (selectedMesh && originalColor !== null) {
+    selectedMesh.material.emissive.setHex(0x000000);
+  }
+  selectedObj = null;
+  selectedMesh = null;
+  originalColor = null;
+}
+
+export function initDragControls(camera, domElement, orbitControls) {
+  const getPointer = e => {
+    const touch = e.touches ? e.touches[0] : e;
+    pointer.x = (touch.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+  };
+
+  const onDown = e => {
+    if (!dragEnabled) return;
+    getPointer(e);
+    raycaster.setFromCamera(pointer, camera);
+
+    // Test against object meshes
+    const hits = raycaster.intersectObjects(meshes);
+    if (hits.length > 0) {
+      const hitMesh = hits[0].object;
+      const idx = meshes.indexOf(hitMesh);
+      if (idx === -1) return;
+
+      // Select this object
+      deselectCurrent();
+      selectedObj = objects[idx];
+      selectedMesh = hitMesh;
+      selectedMesh.material.emissive.setHex(0x332200);
+      isDragging = true;
+
+      // Set drag plane at object's Y level
+      dragPlane.set(new THREE.Vector3(0, 1, 0), -hitMesh.position.y);
+
+      // Compute offset between ray hit and mesh center
+      raycaster.ray.intersectPlane(dragPlane, intersection);
+      dragOffset.copy(hitMesh.position).sub(intersection);
+
+      // Disable orbit while dragging
+      if (orbitControls) orbitControls.enabled = false;
+
+      e.preventDefault?.();
+      e.stopPropagation?.();
+    }
+  };
+
+  const onMove = e => {
+    if (!isDragging || !selectedMesh || !selectedObj) return;
+    getPointer(e);
+    raycaster.setFromCamera(pointer, camera);
+    raycaster.ray.intersectPlane(dragPlane, intersection);
+    intersection.add(dragOffset);
+
+    // Move the mesh
+    selectedMesh.position.x = intersection.x;
+    selectedMesh.position.z = intersection.z;
+
+    // Update the logical object
+    updateObjectPosition(selectedObj, intersection.x, intersection.z);
+
+    e.preventDefault?.();
+  };
+
+  const onUp = () => {
+    if (isDragging && orbitControls) {
+      orbitControls.enabled = true;
+    }
+    isDragging = false;
+  };
+
+  domElement.addEventListener('pointerdown', onDown);
+  domElement.addEventListener('pointermove', onMove);
+  domElement.addEventListener('pointerup', onUp);
+  domElement.addEventListener('pointerleave', onUp);
+  // Touch events for mobile
+  domElement.addEventListener('touchstart', onDown, { passive: false });
+  domElement.addEventListener('touchmove', onMove, { passive: false });
+  domElement.addEventListener('touchend', onUp);
+}
 
 export function addBox(scene, x, y, z, w = 2, h = 2, d = 2, material = 'wood') {
   const geo = new THREE.BoxGeometry(w, h, d);
@@ -123,6 +228,21 @@ export function removeLastObject(scene) {
 
 export function getObjects() {
   return objects;
+}
+
+function updateObjectPosition(obj, x, z) {
+  if (obj.type === 'box') {
+    const halfW = (obj.max.x - obj.min.x) / 2;
+    const halfZ = (obj.max.z - obj.min.z) / 2;
+    obj.min.x = x - halfW;
+    obj.max.x = x + halfW;
+    obj.min.z = z - halfZ;
+    obj.max.z = z + halfZ;
+  } else if (obj.type === 'sphere') {
+    obj.center.x = x;
+    obj.center.z = z;
+  }
+  invalidateCache();
 }
 
 // Place object at camera target (raycasting forward)

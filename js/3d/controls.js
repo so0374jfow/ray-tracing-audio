@@ -83,3 +83,7 @@ export function isMobileDevice() {
 export function getPlayerPosition() {
   return { x: playerPos.x, y: playerPos.y, z: playerPos.z };
 }
+
+export function getOrbitControls() {
+  return controls;
+}

@@ -7,6 +7,7 @@ import {
   isControlsActive,
   isMobileDevice,
   getPlayerPosition,
+  getOrbitControls,
 } from './controls.js';
 import { traceAllRays } from './ray-tracing/trace.js';
 import {
@@ -21,6 +22,9 @@ import {
   addSphere,
   placeAtCameraTarget,
   removeLastObject,
+  initDragControls,
+  enableDragMode,
+  isDragMode,
 } from './objects/scene-objects.js';
 
 // Inject styles (avoids PostCSS/Tailwind pipeline on inline <style> tags)
@@ -91,6 +95,9 @@ async function init() {
   // Controls
   initControls(camera, canvas);
 
+  // Drag controls for moving objects
+  initDragControls(camera, canvas, getOrbitControls());
+
   // Ray visualization
   createRayVisualization(scene);
 
@@ -114,13 +121,42 @@ async function init() {
   document.addEventListener('pointerdown', startAudioOnce, { once: true });
   document.addEventListener('touchstart', startAudioOnce, { once: true });
 
-  // Mobile audio toggle button
-  const audioBtn = document.createElement('div');
-  audioBtn.textContent = '\u266B';
-  audioBtn.style.cssText =
-    'position:fixed;bottom:20px;right:20px;width:50px;height:50px;border-radius:50%;' +
+  // Floating buttons
+  const btnStyle =
+    'width:50px;height:50px;border-radius:50%;' +
     'background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);color:#fff;' +
     'font-size:22px;display:flex;align-items:center;justify-content:center;z-index:20;cursor:pointer;';
+
+  const btnContainer = document.createElement('div');
+  btnContainer.style.cssText =
+    'position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:20;';
+
+  // Move/drag toggle button
+  const moveBtn = document.createElement('div');
+  moveBtn.textContent = '\u2725'; // crosshair arrows
+  moveBtn.title = 'Move obstacles';
+  moveBtn.style.cssText = btnStyle;
+  const toggleMove = () => {
+    const on = !isDragMode();
+    enableDragMode(on);
+    moveBtn.style.background = on ? 'rgba(255,200,0,0.5)' : 'rgba(255,255,255,0.2)';
+  };
+  moveBtn.addEventListener('click', toggleMove);
+  moveBtn.addEventListener(
+    'touchstart',
+    e => {
+      e.preventDefault();
+      toggleMove();
+    },
+    { passive: false }
+  );
+  btnContainer.appendChild(moveBtn);
+
+  // Audio toggle button
+  const audioBtn = document.createElement('div');
+  audioBtn.textContent = '\u266B';
+  audioBtn.title = 'Toggle audio';
+  audioBtn.style.cssText = btnStyle;
   audioBtn.addEventListener('click', () => toggleAudio());
   audioBtn.addEventListener(
     'touchstart',
@@ -130,7 +166,9 @@ async function init() {
     },
     { passive: false }
   );
-  document.body.appendChild(audioBtn);
+  btnContainer.appendChild(audioBtn);
+
+  document.body.appendChild(btnContainer);
 
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
