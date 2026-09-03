@@ -16,6 +16,7 @@ export default defineConfig({
         platonic: resolve(__dirname, 'platonic.html'),
         'platonic-text': resolve(__dirname, 'platonic-text.html'),
         '3d': resolve(__dirname, '3d.html'),
+        notice: resolve(__dirname, 'notice.html'),
       },
     },
   },

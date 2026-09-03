@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Copyright & Authorship Notice — Ray Tracing Audio</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 40px 24px 80px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #222;
+      background: #fff;
+    "
+  >
+    <h1 style="font-size: 20px; margin-bottom: 4px">
+      Copyright, Authorship &amp; Confidentiality Notice
+    </h1>
+    <div style="color: #555; font-size: 14px; margin-bottom: 28px">
+      <span id="author-line" style="display: block"></span>
+      <span style="display: block"
+        >Project: Ray Tracing Audio — creative and artistic contributions</span
+      >
+      <span style="display: block">© 2026 — All rights reserved (as described below)</span>
+    </div>
+
+    <p style="font-size: 14px">
+      1. <strong>Copyright and scope.</strong> This site presents an evolving media artwork
+      prototype. The original creative additions on this site — the visual and interaction design,
+      the audio-reactive artwork logic, and the specific composition of the 3D and 2D scenes — are
+      the work of the rights holder named above and are protected by copyright from the moment of
+      creation, without registration or formality, under the copyright laws of Germany
+      (Urheberrechtsgesetz, UrhG), Switzerland (Copyright Act, CopA/URG, SR 231.1), France (Code de
+      la propriété intellectuelle), Canada (Copyright Act, R.S.C. 1985, c. C-42), and the European
+      Union copyright framework (including Directive 2001/29/EC), as well as equivalent copyright
+      law worldwide via the Berne Convention. Copyright protects the specific creative expression of
+      this work — its design, composition, and code — not the underlying ideas, mathematical or
+      geometric methods, or the general technique of audio ray tracing, which are not protected as
+      such.
+    </p>
+    <p style="font-size: 14px">
+      This project builds on the open-source "Ray Tracing Audio" engine originally published by
+      Goscha Graf in 2015 under the MIT License. That original code remains available under the MIT
+      License — see the <code>LICENSE</code> file in the project repository. Nothing in this notice
+      restricts the rights already granted under that license for the original MIT-licensed code;
+      this notice concerns only the additional creative and artistic contributions layered on top of
+      it.
+    </p>
+
+    <p style="font-size: 14px">
+      2. <strong>Authorship and integrity.</strong> The rights holder, as author of the creative
+      additions described above, holds the right to be recognized as their creator and to decide if,
+      when, and how they are made available to the public, consistent with the moral-rights
+      doctrines of the jurisdictions listed above (e.g. German UrhG §§ 12–14; Swiss CopA Art. 9 and
+      11; French Code de la propriété intellectuelle Art. L.121-1 et seq.; Canadian Copyright Act s.
+      14.1 and 28.2). The author retains the right to decide whether, when, and how the work may be
+      altered or used to create a derivative work, and may object to any alteration or distortion
+      that would prejudice their honor or reputation, even where a third party has been authorized
+      to use or adapt the work.
+    </p>
+
+    <p style="font-size: 14px">
+      3. <strong>Duration.</strong> Copyright protection generally lasts for the lifetime of the
+      author plus 70 years under the laws of the European Union, Germany, Switzerland, and France,
+      and for the lifetime of the author plus 70 years under the Canadian Copyright Act. Protection
+      applies automatically from creation, without registration, in all of these jurisdictions.
+    </p>
+
+    <p style="font-size: 14px">
+      4. <strong>Preview status.</strong> Pages marked "confidential preview" present work in
+      progress, shared for evaluation only and not intended as a public release of the creative
+      additions described in Section 1. Viewing this site grants no right to copy, forward,
+      republish, or otherwise distribute those creative additions.
+    </p>
+
+    <p style="font-size: 14px">
+      5. <strong>Permitted use.</strong> You may view this site for your own evaluation.
+      Reproduction, distribution, adaptation, public communication, or commercial use of the
+      creative additions described in Section 1 requires prior written consent from the rights
+      holder. This does not affect any rights already granted under the MIT License to the original
+      2015 ray-tracing engine code referenced above.
+    </p>
+
+    <p style="font-size: 14px">
+      6. <strong>Governing law.</strong> This notice draws on the copyright laws of Germany,
+      Switzerland, France, Canada, and the European Union. Nothing in this notice limits any
+      protection available under the copyright law of the jurisdiction in which a use occurs.
+    </p>
+
+    <button
+      id="back"
+      type="button"
+      style="
+        display: inline-block;
+        margin-top: 36px;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: underline;
+        color: #222;
+        background: none;
+        border: none;
+        padding: 0;
+        font-family: inherit;
+      "
+    >
+      ← Close and go back
+    </button>
+
+    <script type="module">
+      const RIGHTS_HOLDER_NAME = 'Andrej Arpad Ambroz Harnist';
+
+      function drawNameCanvas(fontSize, color) {
+        const dpr = window.devicePixelRatio || 1;
+        const font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif`;
+
+        const measure = document.createElement('canvas').getContext('2d');
+        measure.font = font;
+        const width = Math.ceil(measure.measureText(RIGHTS_HOLDER_NAME).width) + 2;
+        const height = Math.ceil(fontSize * 1.4);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.cssText = `width:${width}px;height:${height}px;display:inline-block;vertical-align:-4px;`;
+        canvas.setAttribute('role', 'img');
+        canvas.setAttribute('aria-label', 'rights holder name');
+
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.font = font;
+        ctx.fillStyle = color;
+        ctx.textBaseline = 'middle';
+        ctx.fillText(RIGHTS_HOLDER_NAME, 1, height / 2);
+
+        return canvas;
+      }
+
+      const authorLine = document.getElementById('author-line');
+      authorLine.textContent = 'Author and rights holder: ';
+      authorLine.appendChild(drawNameCanvas(14, '#222222'));
+
+      document.getElementById('back').addEventListener('click', () => {
+        if (window.opener || history.length <= 1) {
+          window.close();
+        }
+        history.back();
+      });
+    </script>
+  </body>
+</html>
